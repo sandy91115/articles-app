@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content Monetization Portal</title>
+    <link rel="stylesheet" href="/portal.css">
+</head>
+<body>
+    <div class="backdrop"></div>
+    <div class="backdrop glow"></div>
+
+    <div class="portal-shell">
+        <header class="topbar">
+            <div class="brand-wrap">
+                <span class="brand-mark">CP</span>
+                <div>
+                    <p class="eyebrow">Coins, content, control</p>
+                    <h1>Content Monetization Portal</h1>
+                </div>
+            </div>
+
+           
+        </header>
+
+        <main>
+            <section id="authScreen" class="screen auth-screen">
+                <div class="hero-panel surface">
+                    <div class="hero-copy">
+                        <p class="eyebrow accent">Platform workspace</p>
+                        <h2>Secure operations for content, credits, and payouts.</h2>
+                        <p class="hero-text">
+                            One workspace for admin oversight, author onboarding, article publishing, wallet activity,
+                            unlock management, and withdrawal control.
+                        </p>
+                    </div>
+
+                    <div class="feature-ribbon">
+                        <div class="mini-tile">
+                            <span>Admin</span>
+                            <strong>Monitor platform health, revenue, and withdrawal approvals</strong>
+                        </div>
+                        <div class="mini-tile">
+                            <span>Author</span>
+                            <strong>Publish premium content and manage earnings in one place</strong>
+                        </div>
+                        <div class="mini-tile">
+                            <span>Reader</span>
+                            <strong>Use wallet credits to unlock paid articles instantly</strong>
+                        </div>
+                    </div>
+
+                    <div class="demo-grid">
+                        <button class="demo-card" type="button" data-demo-login="admin@example.com|password">
+                            <span class="demo-role">Admin Demo</span>
+                            <strong>admin@example.com</strong>
+                            <small>Control suite, analytics, and payout queue</small>
+                        </button>
+                        <button class="demo-card" type="button" data-demo-login="author@example.com|password">
+                            <span class="demo-role">Author Demo</span>
+                            <strong>author@example.com</strong>
+                            <small>Publishing studio and earnings workspace</small>
+                        </button>
+                        <button class="demo-card" type="button" data-demo-login="reader@example.com|password">
+                            <span class="demo-role">Reader Demo</span>
+                            <strong>reader@example.com</strong>
+                            <small>Wallet access and premium reading flow</small>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="auth-panel surface">
+                    <div class="panel-header">
+                        <p class="eyebrow">Portal Access</p>
+                        <h3>Secure access for admins and authors</h3>
+                        <p class="muted">Sign in to continue or create a new author account. Email verification starts right after signup.</p>
+                    </div>
+
+                    <div id="authTabsPanel" class="auth-tabs" role="tablist" aria-label="Portal authentication">
+                        <button class="auth-tab active" id="authTabLogin" role="tab" aria-selected="true" aria-controls="loginView" type="button" data-auth-view="login">Sign In</button>
+                        <button class="auth-tab" id="authTabSignup" role="tab" aria-selected="false" aria-controls="signupView" type="button" data-auth-view="signup">Author Sign Up</button>
+                        <button class="auth-tab hidden" id="authTabVerify" role="tab" aria-selected="false" aria-controls="verifyView" type="button" data-auth-view="verify" aria-hidden="true">Verify Email</button>
+                    </div>
+
+                    <div id="loginView" class="auth-view" role="tabpanel" aria-labelledby="authTabLogin">
+                        <form id="loginForm" class="stack-form">
+                            <label class="field">
+                                <span>Email</span>
+                                <input id="emailInput" name="email" type="email" placeholder="admin@example.com" autocomplete="username" required>
+                            </label>
+
+                            <label class="field">
+                                <span>Password</span>
+                                <input id="passwordInput" name="password" type="password" placeholder="password" autocomplete="current-password" required>
+                            </label>
+
+                            <button id="loginButton" class="primary-button" type="submit">Open Dashboard</button>
+                        </form>
+
+                        <div class="credential-note">
+                            <span>Demo credentials:</span>
+                            <code>admin@example.com / password</code>
+                        </div>
+
+                        <div class="auth-inline-actions">
+                            <button class="text-button" type="button" data-auth-switch="signup">Need an author account? Create one here.</button>
+                        </div>
+                    </div>
+
+                    <div id="signupView" class="auth-view hidden" role="tabpanel" aria-labelledby="authTabSignup">
+                        <form id="signupForm" class="stack-form">
+                            <label class="field">
+                                <span>Full Name</span>
+                                <input id="signupNameInput" name="name" type="text" placeholder="Sandeep Author" autocomplete="name" required>
+                            </label>
+
+                            <div class="field-row">
+                                <label class="field">
+                                    <span>Email</span>
+                                    <input id="signupEmailInput" name="email" type="email" placeholder="author@yourmail.com" autocomplete="email" required>
+                                </label>
+
+                                <label class="field">
+                                    <span>Phone</span>
+                                    <input id="signupPhoneInput" name="phone" type="text" placeholder="+91 98765 43210" autocomplete="tel">
+                                </label>
+                            </div>
+
+                            <div class="field-row">
+                                <label class="field">
+                                    <span>Password</span>
+                                    <input id="signupPasswordInput" name="password" type="password" minlength="8" placeholder="Minimum 8 characters" autocomplete="new-password" required>
+                                </label>
+
+                                <label class="field">
+                                    <span>Confirm Password</span>
+                                    <input id="signupPasswordConfirmationInput" name="password_confirmation" type="password" minlength="8" placeholder="Repeat password" autocomplete="new-password" required>
+                                </label>
+                            </div>
+
+                            <div class="helper-note">
+                                Public registration is available only for authors. Admin accounts remain controlled from the backend.
+                            </div>
+
+                            <button id="signupButton" class="primary-button" type="submit">Create Author Account</button>
+                        </form>
+
+                        <div class="auth-inline-actions">
+                            <button class="text-button" type="button" data-auth-switch="login">Already verified? Sign in instead.</button>
+                        </div>
+                    </div>
+
+                    <div id="verifyView" class="auth-view hidden" role="tabpanel" aria-labelledby="authTabVerify">
+                        <form id="verifyOtpForm" class="stack-form">
+                            <label class="field">
+                                <span>Email</span>
+                                <input id="verifyEmailInput" name="email" type="email" placeholder="author@yourmail.com" autocomplete="email" required>
+                            </label>
+
+                            <label class="field">
+                                <span>OTP Code</span>
+                                <input id="otpCodeInput" name="code" type="text" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="6-digit OTP" autocomplete="one-time-code" required>
+                            </label>
+
+                            <div class="helper-note">
+                                OTP codes are sent through your Laravel mail setup. In local debug mode, the same code is also shown in the message box.
+                            </div>
+
+                            <button id="verifyButton" class="primary-button" type="submit">Verify Email</button>
+                        </form>
+
+                        <div class="auth-inline-actions">
+                            <button id="resendOtpButton" class="ghost-button" type="button">Resend OTP</button>
+                            <button class="text-button" type="button" data-auth-switch="login">Return to sign in.</button>
+                        </div>
+                    </div>
+
+                    <div id="authMessage" class="message-box hidden"></div>
+                </div>
+            </section>
+
+            <section id="appScreen" class="screen app-screen hidden">
+                <aside class="sidebar surface">
+                    <div class="identity-card">
+                        <p class="eyebrow">Signed in</p>
+                        <h3 id="sidebarName">Demo User</h3>
+                        <p id="sidebarRole" class="role-chip">Reader</p>
+                    </div>
+
+                    <div class="wallet-panel">
+                        <span>Wallet Balance</span>
+                        <strong id="sidebarWallet">0 credits</strong>
+                    </div>
+
+                    <div class="nav-note">
+                        <p id="sidebarHint">
+                            Admin sees moderation queues and business numbers here.
+                        </p>
+                    </div>
+
+                    <button id="logoutButton" class="ghost-button danger" type="button">Log Out</button>
+                </aside>
+
+                <section class="workspace">
+                    <div class="workspace-head">
+                        <div>
+                            <p class="eyebrow accent" id="workspaceEyebrow">Admin Console</p>
+                            <h2 id="workspaceTitle">Loading your dashboard...</h2>
+                            <p id="workspaceSubtitle" class="muted">
+                                Pulling the latest state from the backend APIs.
+                            </p>
+                        </div>
+
+                        <div id="workspaceRoleBadge" class="status-pill">reader</div>
+                    </div>
+
+                    <div id="dashboardContent" class="dashboard-content"></div>
+                </section>
+            </section>
+        </main>
+    </div>
+
+    <div id="articleModal" class="modal hidden">
+        <div class="modal-shell surface">
+            <button id="closeModalButton" class="close-button" type="button">×</button>
+            <div id="articleModalContent"></div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+
+    <script src="/portal.js"></script>
+</body>
+</html>
