@@ -45,7 +45,7 @@ class _ReaderLoginScreenState extends State<ReaderLoginScreen> {
   @override
   void initState() {
     super.initState();
-    _emailController = TextEditingController(text: 'reader@example.com');
+    _emailController = TextEditingController(text: 'aarav.mehta@example.com');
     _passwordController = TextEditingController(text: 'password');
     _baseUrlController = TextEditingController(text: widget.suggestedBaseUrl);
     _signupNameController = TextEditingController();
@@ -455,7 +455,7 @@ class _ReaderLoginScreenState extends State<ReaderLoginScreen> {
               _buildTextField(
                 controller: _emailController,
                 label: 'Email',
-                hint: 'reader@example.com',
+                hint: 'aarav.mehta@example.com',
                 keyboardType: TextInputType.emailAddress,
                 textInputAction: TextInputAction.next,
               ),

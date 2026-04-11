@@ -11,7 +11,7 @@ use App\Http\Controllers\Api\WalletController;
 use App\Http\Controllers\Api\WithdrawalController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('auth')->group(function () {
+Route::prefix('auth')->middleware('throttle:10,1')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
     Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
@@ -21,7 +21,7 @@ Route::prefix('auth')->group(function () {
 Route::get('/articles', [ArticleController::class, 'index']);
 Route::post('/payments/razorpay/webhook', [PaymentController::class, 'razorpayWebhook']);
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['throttle:60,1', 'auth:sanctum'])->group(function () {
     Route::prefix('auth')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
         Route::post('/logout', [AuthController::class, 'logout']);

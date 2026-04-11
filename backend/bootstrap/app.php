@@ -52,4 +52,14 @@ return Application::configure(basePath: dirname(__DIR__))
                 'message' => 'The backend database is unavailable. Start MySQL and confirm backend/.env points to a working local database.',
             ], Response::HTTP_SERVICE_UNAVAILABLE);
         });
-    })->create();
+        $exceptions->render(function (Throwable $e, Request $request) {
+            if (! ($request->is('api/*') || $request->expectsJson())) {
+                return null;
+            }
+            return response()->json([
+                'message' => config('app.debug') ? $e->getMessage() : 'Server Error',
+                'code' => $e->getCode() ?: 500,
+            ], 500);
+        });
+    })
+->create();

@@ -1,10 +1,11 @@
 <?php
 
 return [
-    'credits_per_rupee' => (int) env('CREDITS_PER_RUPEE', 1),
-    'min_purchase_credits' => (int) env('MIN_PURCHASE_CREDITS', 50),
-    'min_withdrawal_credits' => (int) env('MIN_WITHDRAWAL_CREDITS', 100),
-    'default_access_hours' => (int) env('DEFAULT_ARTICLE_ACCESS_HOURS', 24),
+    'default_access_hours' => env('DEFAULT_ACCESS_HOURS', 24),
+    'max_commission_percentage' => env('MAX_COMMISSION_PERCENTAGE', 30),
+    'default_commission_type' => 'percentage',
+    'default_commission_value' => env('DEFAULT_COMMISSION_VALUE', 10),
+    'minimum_wallet_topup_rupees' => env('MINIMUM_WALLET_TOPUP_RUPEES', 100),
+    'minimum_withdrawal_amount' => env('MINIMUM_WITHDRAWAL_AMOUNT', 500),
     'verification_code_ttl_minutes' => (int) env('VERIFICATION_CODE_TTL_MINUTES', 10),
-    'payment_provider' => env('PAYMENT_PROVIDER', 'razorpay'),
 ];

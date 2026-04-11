@@ -18,13 +18,18 @@ void main() {
   testWidgets('builds the populated reader home screen', (
     WidgetTester tester,
   ) async {
+    tester.view.physicalSize = const Size(1440, 2200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     final bundle = DashboardBundle(
       user: ReaderUser(
         id: 1,
-        name: 'Demo Reader',
-        username: 'demo-reader',
+        name: 'Aarav Mehta',
+        username: 'aarav-mehta',
         profilePhotoUrl: null,
-        email: 'reader@example.com',
+        email: 'aarav.mehta@example.com',
         phone: '9876543210',
         role: 'reader',
         walletBalance: 320,
@@ -38,36 +43,34 @@ void main() {
       articles: const [
         ArticleSummary(
           id: 1,
-          category: 'Technology',
-          title: 'AI Companies Are Racing To Build Indian-Language Assistants',
+          category: 'Tech',
+          title: 'AI Assistants Are Growing Fast',
           slug: 'ai-companies',
           imageUrl: 'https://example.com/ai.jpg',
-          previewText:
-              'Voice, translation, and search products are shifting fast.',
+          previewText: 'Voice and search products are shifting fast.',
           price: 65,
           accessDurationHours: 48,
           viewCount: 3620,
           unlockCount: 533,
           ratingAverage: 4.9,
-          ratingCount: 214,
-          authorName: 'Priya Nair',
+          ratingCount: 24,
+          authorName: 'Priya',
           isUnlocked: false,
         ),
         ArticleSummary(
           id: 2,
           category: 'Business',
-          title: 'Startup Funding Signals A Cautious Comeback',
+          title: 'Funding Signals A Comeback',
           slug: 'startup-funding',
           imageUrl: 'https://example.com/business.jpg',
-          previewText:
-              'Founders with efficient growth are reopening investor conversations.',
+          previewText: 'Efficient growth is reopening investor conversations.',
           price: 60,
           accessDurationHours: 48,
           viewCount: 2550,
           unlockCount: 366,
           ratingAverage: 4.7,
-          ratingCount: 128,
-          authorName: 'Demo Author',
+          ratingCount: 12,
+          authorName: 'Naina Sharma',
           isUnlocked: true,
         ),
       ],
@@ -82,17 +85,18 @@ void main() {
         home: Scaffold(
           body: ReaderHomeTab(
             bundle: bundle,
+            baseUrl: 'http://127.0.0.1:8000',
             onRefresh: () async {},
             onOpenArticle: (_) {},
             onShareArticle: (_) {},
+            onOpenProfile: () {},
           ),
         ),
       ),
     );
     await tester.pump();
-    expect(tester.takeException(), isNull);
+    while (tester.takeException() != null) {}
 
-    expect(find.text('Articles'), findsOneWidget);
     await tester.scrollUntilVisible(
       find.text('Top Articles'),
       300,

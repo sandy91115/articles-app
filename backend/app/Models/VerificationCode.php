@@ -10,10 +10,12 @@ class VerificationCode extends Model
 {
     protected $fillable = [
         'user_id',
+        'code',
+        'type',
         'email',
         'purpose',
-        'code',
         'expires_at',
+        'used_at',
         'consumed_at',
     ];
 
@@ -34,6 +36,11 @@ class VerificationCode extends Model
     public function isExpired(): bool
     {
         return $this->expires_at->isPast();
+    }
+
+    public function isUsed(): bool
+    {
+        return $this->used_at !== null;
     }
 
     public function isConsumed(): bool

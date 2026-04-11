@@ -40,7 +40,7 @@ class VerificationCodeService
             Mail::to($user->email)->send(new EmailVerificationOtpMail(
                 userName: $user->name,
                 code: $plainCode,
-                expiresInMinutes: (int) config('monetization.verification_code_ttl_minutes'),
+                expiresInMinutes: (int) (config('monetization.verification_code_ttl_minutes') ?? 10),
             ));
         } catch (Throwable $exception) {
             Log::warning('Unable to send verification OTP email.', [

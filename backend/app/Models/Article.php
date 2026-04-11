@@ -7,6 +7,8 @@ use App\Enums\CommissionType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Arr;
+use Stringable;
 
 class Article extends Model
 {
@@ -88,5 +90,68 @@ class Article extends Model
             })
             ->latest('expires_at')
             ->first();
+    }
+
+    public function shareTitle(): string
+    {
+        return $this->normalizeShareText($this->getAttribute('title'), 'Untitled story');
+    }
+
+    public function sharePreviewText(): string
+    {
+        return $this->normalizeShareText($this->getAttribute('preview_text'), 'Story preview unavailable.');
+    }
+
+    public function shareCategory(): string
+    {
+        return $this->normalizeShareText($this->getAttribute('category'), 'General');
+    }
+
+    public function shareAuthorName(): string
+    {
+        return $this->normalizeShareText($this->author?->getAttribute('name'), 'Mono Reader');
+    }
+
+    public function shareImageUrl(): ?string
+    {
+        $imageUrl = $this->normalizeShareText($this->getAttribute('image_url'));
+
+        if ($imageUrl === '') {
+            return null;
+        }
+
+        if (str_starts_with($imageUrl, 'http://') || str_starts_with($imageUrl, 'https://')) {
+            return $imageUrl;
+        }
+
+        return url(ltrim($imageUrl, '/'));
+    }
+
+    protected function normalizeShareText(mixed $value, string $fallback = ''): string
+    {
+        if ($value instanceof Stringable) {
+            $value = (string) $value;
+        }
+
+        if (is_string($value) || is_int($value) || is_float($value) || is_bool($value)) {
+            $text = trim((string) $value);
+
+            return $text !== '' ? $text : $fallback;
+        }
+
+        if (is_array($value)) {
+            $pieces = array_filter(array_map(
+                static fn (mixed $item): string => $item instanceof Stringable || is_scalar($item)
+                    ? trim((string) $item)
+                    : '',
+                Arr::flatten($value),
+            ));
+
+            $text = trim(implode(' ', $pieces));
+
+            return $text !== '' ? $text : $fallback;
+        }
+
+        return $fallback;
     }
 }

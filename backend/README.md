@@ -36,7 +36,7 @@ C:\xampp\mysql\bin\mysql.exe -u root -e "CREATE DATABASE IF NOT EXISTS new_artic
 composer install
 ```
 
-4. Run migrations and seed demo data:
+4. Run migrations and seed local accounts:
 
 ```bash
 php artisan migrate:fresh --seed
@@ -60,11 +60,11 @@ The current suite covers:
 - article unlock commission splitting
 - withdrawal rejection and wallet restoration
 
-## Seeded demo accounts
+## Seeded local accounts
 
 - Admin: `admin@example.com` / `password`
-- Author: `author@example.com` / `password`
-- Reader: `reader@example.com` / `password`
+- Author: `naina.sharma@example.com` / `password`
+- Reader: `aarav.mehta@example.com` / `password`
 
 ## Key environment variables
 

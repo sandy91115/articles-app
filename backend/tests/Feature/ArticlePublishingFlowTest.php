@@ -7,12 +7,21 @@ use App\Enums\CommissionType;
 use App\Models\Article;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\File;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class ArticlePublishingFlowTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function tearDown(): void
+    {
+        File::deleteDirectory(public_path('uploads/article-images'));
+
+        parent::tearDown();
+    }
 
     public function test_author_articles_are_published_immediately_when_created(): void
     {
@@ -75,5 +84,36 @@ class ArticlePublishingFlowTest extends TestCase
             ->assertJsonPath('article.id', $article->id)
             ->assertJsonPath('article.status', ArticleStatus::PUBLISHED->value)
             ->assertJsonPath('article.approved_by', $admin->id);
+    }
+
+    public function test_author_can_upload_an_article_cover_image(): void
+    {
+        $author = User::factory()->author()->create();
+
+        Sanctum::actingAs($author);
+
+        $response = $this->post('/api/articles', [
+            'category' => 'Technology',
+            'title' => 'Uploaded Cover Story',
+            'image' => UploadedFile::fake()->image('story-cover.jpg', 1200, 630),
+            'preview_text' => 'Preview copy',
+            'content' => 'Full premium content',
+            'price' => 25,
+            'commission_type' => CommissionType::PERCENTAGE->value,
+            'commission_value' => 10,
+            'access_duration_hours' => 24,
+        ], [
+            'Accept' => 'application/json',
+        ]);
+
+        $response
+            ->assertCreated()
+            ->assertJsonPath('article.title', 'Uploaded Cover Story');
+
+        $imagePath = $response->json('article.image_url');
+
+        $this->assertIsString($imagePath);
+        $this->assertStringStartsWith('/uploads/article-images/', $imagePath);
+        $this->assertFileExists(public_path(ltrim($imagePath, '/')));
     }
 }

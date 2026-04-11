@@ -1,15 +1,12 @@
-# UI Improvement Plan for Admin/Author Login & Signup
+# OTP Verification Fix - Task Progress
 
-## Approved Plan Overview
-Modernize portal.html login/signup UI with icons, animations, password strength, toggles, better feedback.
+## Plan Steps:
+- [x] Step 1: Create new Laravel migration to add missing columns (email, purpose, consumed_at) to verification_codes table
+- [x] Step 2: Update VerificationCode model to include all fields in fillable/casts and align with service usage
+- [ ] Step 3: Verify/update config/monetization.php for verification_code_ttl_minutes
+- [ ] Step 4: Run migration `cd backend && php artisan migrate`
+- [ ] Step 5: Test OTP flow (register new user, check email, verify OTP)
+- [ ] Step 6: Check backend/storage/logs/laravel.log for any errors
 
-## Steps (Completed: ✅ | Pending: ⭕)
-- ✅ **Step 1**: Create this TODO.md to track progress.
-- ✅ **Step 2**: Add Font Awesome icons and structure updates to portal.html (icons, toggles, strength meter).
-- ✅ **Step 3**: Enhance portal.css with new styles (icons, animations, strength meter, role accents).
-- ⭕ **Step 4**: Update portal.js for password toggle, strength validation, enhanced toasts.
-- ⭕ **Step 5**: Test changes (open portal.html, verify forms/responsiveness).
-- ⭕ **Step 6**: Update TODO.md with completion, attempt_completion.
-
-**Next**: Step 4 - JS functionality for toggles and strength.
+## Current Status: Fixed config int cast. Server restart needed. Test OTP: register new email, use debug_code to verify. Check if works now. Mark [x] Step 4.
 

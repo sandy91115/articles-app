@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Content Monetization Portal</title>
-    <link rel="stylesheet" href="/portal.css">
+    <link rel="stylesheet" href="/portal-clean.css">
 </head>
 <body>
     <div class="backdrop"></div>
@@ -52,18 +52,18 @@
 
                     <div class="demo-grid">
                         <button class="demo-card" type="button" data-demo-login="admin@example.com|password">
-                            <span class="demo-role">Admin Demo</span>
+                            <span class="demo-role">Admin Access</span>
                             <strong>admin@example.com</strong>
                             <small>Control suite, analytics, and payout queue</small>
                         </button>
-                        <button class="demo-card" type="button" data-demo-login="author@example.com|password">
-                            <span class="demo-role">Author Demo</span>
-                            <strong>author@example.com</strong>
+                        <button class="demo-card" type="button" data-demo-login="naina.sharma@example.com|password">
+                            <span class="demo-role">Naina Sharma</span>
+                            <strong>naina.sharma@example.com</strong>
                             <small>Publishing studio and earnings workspace</small>
                         </button>
-                        <button class="demo-card" type="button" data-demo-login="reader@example.com|password">
-                            <span class="demo-role">Reader Demo</span>
-                            <strong>reader@example.com</strong>
+                        <button class="demo-card" type="button" data-demo-login="aarav.mehta@example.com|password">
+                            <span class="demo-role">Aarav Mehta</span>
+                            <strong>aarav.mehta@example.com</strong>
                             <small>Wallet access and premium reading flow</small>
                         </button>
                     </div>
@@ -98,7 +98,7 @@
                         </form>
 
                         <div class="credential-note">
-                            <span>Demo credentials:</span>
+                            <span>Admin credentials:</span>
                             <code>admin@example.com / password</code>
                         </div>
 
@@ -183,12 +183,12 @@
                 <aside class="sidebar surface">
                     <div class="identity-card">
                         <p class="eyebrow">Signed in</p>
-                        <h3 id="sidebarName">Demo User</h3>
+                        <h3 id="sidebarName">Portal User</h3>
                         <p id="sidebarRole" class="role-chip">Reader</p>
                     </div>
 
                     <div class="wallet-panel">
-                        <span>Wallet Balance</span>
+                        <span id="sidebarMetricLabel">Wallet Balance</span>
                         <strong id="sidebarWallet">0 credits</strong>
                     </div>
 
@@ -211,7 +211,10 @@
                             </p>
                         </div>
 
-                        <div id="workspaceRoleBadge" class="status-pill">reader</div>
+                        <div class="workspace-actions">
+                            <button id="refreshButton" class="ghost-button hidden" type="button">Refresh</button>
+                            <div id="workspaceRoleBadge" class="status-pill">reader</div>
+                        </div>
                     </div>
 
                     <div id="dashboardContent" class="dashboard-content"></div>

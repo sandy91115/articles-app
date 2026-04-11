@@ -10,6 +10,8 @@ use App\Models\Article;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -20,9 +22,11 @@ class ArticleController extends Controller
         $viewer = auth('sanctum')->user();
         $search = trim((string) $request->input('search', ''));
 
-        $query = Article::query()
-            ->with('author:id,name')
-            ->where('status', ArticleStatus::PUBLISHED);
+$query = Article::query()
+            ->with('author:id,name,username')
+            ->where('status', ArticleStatus::PUBLISHED)
+            ->orderBy('published_at', 'desc')
+            ->limit(50);
 
         if ($search !== '') {
             $query->where(function ($builder) use ($search) {
@@ -32,9 +36,8 @@ class ArticleController extends Controller
             });
         }
 
-        $articles = $query
-            ->latest('published_at')
-            ->latest('id')
+$articles = $query
+            ->remember(300) // 5 min cache
             ->get();
 
         $activeUnlockIds = [];
@@ -132,13 +135,14 @@ class ArticleController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $this->validateArticle($request);
+        $imageUrl = $this->resolveArticleImageUrl($request);
 
         $article = Article::create([
             'author_id' => $request->user()->id,
             'category' => $validated['category'],
             'title' => $validated['title'],
             'slug' => $this->uniqueSlug($validated['title']),
-            'image_url' => $validated['image_url'] ?? null,
+            'image_url' => $imageUrl,
             'preview_text' => $validated['preview_text'],
             'content' => $validated['content'],
             'price' => $validated['price'],
@@ -149,7 +153,7 @@ class ArticleController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'Article published successfully.',
+            'message' => 'Article created as draft and submitted for approval.',
             'article' => $article->fresh(),
         ], 201);
     }
@@ -159,6 +163,7 @@ class ArticleController extends Controller
         $this->ensureOwner($request->user(), $article);
 
         $validated = $this->validateArticle($request);
+        $imageUrl = $this->resolveArticleImageUrl($request, $article);
 
         $article->fill([
             'category' => $validated['category'],
@@ -166,7 +171,7 @@ class ArticleController extends Controller
             'slug' => $validated['title'] !== $article->title
                 ? $this->uniqueSlug($validated['title'], $article)
                 : $article->slug,
-            'image_url' => $validated['image_url'] ?? null,
+            'image_url' => $imageUrl,
             'preview_text' => $validated['preview_text'],
             'content' => $validated['content'],
             'price' => $validated['price'],
@@ -177,7 +182,7 @@ class ArticleController extends Controller
         ])->save();
 
         return response()->json([
-            'message' => 'Article updated and published successfully.',
+            'message' => 'Article updated and submitted for approval.',
             'article' => $article->fresh(),
         ]);
     }
@@ -197,8 +202,9 @@ class ArticleController extends Controller
             $this->publishingAttributes($request->user(), $article),
         )->save();
 
+        // TODO: Queue admin notification
         return response()->json([
-            'message' => 'Article published successfully.',
+            'message' => 'Article submitted for admin approval.',
             'article' => $article->fresh(),
         ]);
     }
@@ -209,6 +215,7 @@ class ArticleController extends Controller
             'category' => ['nullable', 'string', 'max:255'],
             'title' => ['required', 'string', 'max:255'],
             'image_url' => ['nullable', 'url', 'max:2048'],
+            'image' => ['nullable', 'image', 'max:4096'],
             'preview_text' => ['required', 'string'],
             'content' => ['required', 'string'],
             'price' => ['required', 'integer', 'min:1'],
@@ -243,6 +250,31 @@ class ArticleController extends Controller
         return $validated;
     }
 
+    protected function resolveArticleImageUrl(Request $request, ?Article $article = null): ?string
+    {
+        if ($request->hasFile('image')) {
+            return $this->storeArticleImage($request->file('image'), $article?->image_url);
+        }
+
+        if ($request->exists('image_url')) {
+            $nextImageUrl = trim((string) $request->input('image_url', ''));
+
+            if ($nextImageUrl === '') {
+                $this->deleteManagedArticleImage($article?->image_url);
+
+                return null;
+            }
+
+            if ($article?->image_url && $article->image_url !== $nextImageUrl) {
+                $this->deleteManagedArticleImage($article->image_url);
+            }
+
+            return $nextImageUrl;
+        }
+
+        return $article?->image_url;
+    }
+
     protected function ensureOwner(User $user, Article $article): void
     {
         if ($article->author_id !== $user->id) {
@@ -270,14 +302,43 @@ class ArticleController extends Controller
         return $slug;
     }
 
-    protected function publishingAttributes(User $user, ?Article $article = null): array
+protected function publishingAttributes(User $user, ?Article $article = null): array
     {
         return [
-            'status' => ArticleStatus::PUBLISHED,
-            'approved_by' => $user->id,
-            'approved_at' => now(),
-            'published_at' => $article?->published_at ?? now(),
+            'status' => ArticleStatus::PENDING_APPROVAL,
+            'approved_by' => null,
+            'approved_at' => null,
+            'published_at' => null,
             'rejection_reason' => null,
         ];
+    }
+
+    protected function storeArticleImage(UploadedFile $image, ?string $existingImageUrl = null): string
+    {
+        $directory = public_path('uploads/article-images');
+
+        File::ensureDirectoryExists($directory);
+
+        $filename = (string) Str::uuid().'.'.$image->getClientOriginalExtension();
+        $image->move($directory, $filename);
+
+        $this->deleteManagedArticleImage($existingImageUrl);
+
+        return '/uploads/article-images/'.$filename;
+    }
+
+    protected function deleteManagedArticleImage(?string $imageUrl): void
+    {
+        $normalized = trim((string) $imageUrl);
+
+        if ($normalized === '' || ! str_starts_with($normalized, '/uploads/article-images/')) {
+            return;
+        }
+
+        $path = public_path(ltrim($normalized, '/'));
+
+        if (File::exists($path)) {
+            File::delete($path);
+        }
     }
 }

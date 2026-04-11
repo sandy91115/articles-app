@@ -1,24 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
+@php
+    $title = $article->shareTitle();
+    $previewText = $article->sharePreviewText();
+    $description = \Illuminate\Support\Str::limit($previewText, 180);
+    $category = $article->shareCategory();
+    $authorName = $article->shareAuthorName();
+    $imageUrl = $article->shareImageUrl();
+@endphp
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $article->title }} | Mono Reader</title>
-    <meta name="description" content="{{ \Illuminate\Support\Str::limit($article->preview_text, 180) }}">
+    <title>{{ $title }} | Mono Reader</title>
+    <meta name="description" content="{{ $description }}">
     <meta property="og:type" content="article">
-    <meta property="og:title" content="{{ $article->title }}">
-    <meta property="og:description" content="{{ \Illuminate\Support\Str::limit($article->preview_text, 180) }}">
+    <meta property="og:title" content="{{ $title }}">
+    <meta property="og:description" content="{{ $description }}">
     <meta property="og:url" content="{{ url()->current() }}">
     <meta property="og:site_name" content="Mono Reader">
-    @if ($article->image_url)
-        <meta property="og:image" content="{{ $article->image_url }}">
+    @if ($imageUrl)
+        <meta property="og:image" content="{{ $imageUrl }}">
         <meta name="twitter:card" content="summary_large_image">
-        <meta name="twitter:image" content="{{ $article->image_url }}">
+        <meta name="twitter:image" content="{{ $imageUrl }}">
     @else
         <meta name="twitter:card" content="summary">
     @endif
-    <meta name="twitter:title" content="{{ $article->title }}">
-    <meta name="twitter:description" content="{{ \Illuminate\Support\Str::limit($article->preview_text, 180) }}">
+    <meta name="twitter:title" content="{{ $title }}">
+    <meta name="twitter:description" content="{{ $description }}">
     <style>
         :root {
             color-scheme: dark;
@@ -227,21 +235,21 @@
     <main class="shell">
         <section class="hero">
             <div class="image-card">
-                @if ($article->image_url)
-                    <img src="{{ $article->image_url }}" alt="{{ $article->title }}">
+                @if ($imageUrl)
+                    <img src="{{ $imageUrl }}" alt="{{ $title }}">
                 @else
-                    <div class="fallback">{{ $article->title }}</div>
+                    <div class="fallback">{{ $title }}</div>
                 @endif
             </div>
 
             <article class="story-card">
                 <div>
-                    <div class="eyebrow">{{ $article->category }} Preview</div>
-                    <h1>{{ $article->title }}</h1>
-                    <p class="dek">{{ $article->preview_text }}</p>
+                    <div class="eyebrow">{{ $category }} Preview</div>
+                    <h1>{{ $title }}</h1>
+                    <p class="dek">{{ $previewText }}</p>
 
                     <div class="meta">
-                        <span>By {{ $article->author?->name ?? 'Mono Reader' }}</span>
+                        <span>By {{ $authorName }}</span>
                         <span>{{ $article->price }} coins</span>
                         <span>{{ number_format((float) $article->rating_average, 1) }} rating</span>
                     </div>
@@ -259,13 +267,13 @@
         <section class="body-grid">
             <div class="panel">
                 <h2>About this story</h2>
-                <p>{{ $article->preview_text }}</p>
+                <p>{{ $previewText }}</p>
             </div>
 
             <aside class="stats">
                 <div class="panel stat">
                     Category
-                    <strong>{{ $article->category }}</strong>
+                    <strong>{{ $category }}</strong>
                 </div>
                 <div class="panel stat">
                     Views

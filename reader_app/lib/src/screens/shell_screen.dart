@@ -106,9 +106,11 @@ class _ReaderShellScreenState extends State<ReaderShellScreen> {
       default:
         return ReaderHomeTab(
           bundle: bundle,
+          baseUrl: widget.session.baseUrl,
           onRefresh: _refresh,
           onOpenArticle: _openArticle,
           onShareArticle: _shareArticle,
+          onOpenProfile: () => _setTabIndex(4),
         );
     }
   }
@@ -584,15 +586,19 @@ class ReaderHomeTab extends StatefulWidget {
   const ReaderHomeTab({
     super.key,
     required this.bundle,
+    required this.baseUrl,
     required this.onRefresh,
     required this.onOpenArticle,
     required this.onShareArticle,
+    required this.onOpenProfile,
   });
 
   final DashboardBundle bundle;
+  final String baseUrl;
   final Future<void> Function() onRefresh;
   final ValueChanged<ArticleSummary> onOpenArticle;
   final ValueChanged<ArticleSummary> onShareArticle;
+  final VoidCallback onOpenProfile;
 
   @override
   State<ReaderHomeTab> createState() => _ReaderHomeTabState();
@@ -676,218 +682,232 @@ class _ReaderHomeTabState extends State<ReaderHomeTab> {
         builder: (context, constraints) {
           final isWide = constraints.maxWidth >= 1040;
 
-          return ListView(
+          return CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 124),
-            children: [
-              _TopHeader(
-                title: 'Articles',
-                initials: widget.bundle.user.initials,
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'A lighter reading board for features, interviews, and premium stories.',
-                style: TextStyle(color: ReaderPalette.inkMuted, height: 1.5),
-              ),
-              const SizedBox(height: 18),
-              _WelcomeCard(
-                bundle: widget.bundle,
-                controller: _searchController,
-                query: _query,
-                onChanged: (value) {
-                  setState(() {
-                    _query = value;
-                  });
-                },
-                onClear: () {
-                  _searchController.clear();
-                  setState(() {
-                    _query = '';
-                  });
-                },
-              ),
-              const SizedBox(height: 18),
-              _CategorySubHeader(
-                options: categories,
-                selectedCategory: selectedCategory,
-                onSelected: (category) {
-                  setState(() {
-                    _selectedCategory = category;
-                  });
-                },
-              ),
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  Expanded(
-                    child: _FeedFilterDropdown(
-                      label: 'By author',
-                      value: selectedAuthor,
-                      options: authors,
-                      onChanged: (value) {
-                        if (value == null) {
-                          return;
-                        }
-
-                        setState(() {
-                          _selectedAuthor = value;
-                        });
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  SizedBox(
-                    height: 56,
-                    child: OutlinedButton.icon(
-                      onPressed:
-                          _query.isEmpty &&
-                              selectedCategory == 'All' &&
-                              selectedAuthor == 'All authors'
-                          ? null
-                          : () {
-                              _searchController.clear();
-                              setState(() {
-                                _query = '';
-                                _selectedCategory = 'All';
-                                _selectedAuthor = 'All authors';
-                              });
-                            },
-                      icon: const Icon(Icons.filter_alt_off_rounded),
-                      label: const Text('Reset'),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              if (filteredArticles.isEmpty)
-                const _EmptyCard(
-                  message:
-                      'No stories match your current search or filters yet.',
-                )
-              else ...[
-                _SectionTitle(
-                  title: 'Top Articles',
-                  actionLabel: '${topArticles.length} ranked',
+            slivers: [
+              SliverPersistentHeader(
+                pinned: true,
+                delegate: _HomeSearchHeaderDelegate(
+                  bundle: widget.bundle,
+                  baseUrl: widget.baseUrl,
+                  controller: _searchController,
+                  query: _query,
+                  onChanged: (value) {
+                    setState(() {
+                      _query = value;
+                    });
+                  },
+                  onClear: () {
+                    _searchController.clear();
+                    setState(() {
+                      _query = '';
+                    });
+                  },
+                  onOpenProfile: widget.onOpenProfile,
                 ),
-                const SizedBox(height: 12),
-                if (leadArticle != null)
-                  if (isWide)
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: _HeroArticleCard(
-                            article: leadArticle,
-                            wideLayout: true,
-                            onTap: () => widget.onOpenArticle(leadArticle),
-                            onShare: () => widget.onShareArticle(leadArticle),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 18, 16, 124),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _HomeSummaryCard(bundle: widget.bundle),
+                      const SizedBox(height: 18),
+                      _CategorySubHeader(
+                        options: categories,
+                        selectedCategory: selectedCategory,
+                        onSelected: (category) {
+                          setState(() {
+                            _selectedCategory = category;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 14),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _FeedFilterDropdown(
+                              label: 'By author',
+                              value: selectedAuthor,
+                              options: authors,
+                              onChanged: (value) {
+                                if (value == null) {
+                                  return;
+                                }
+
+                                setState(() {
+                                  _selectedAuthor = value;
+                                });
+                              },
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          SizedBox(
+                            height: 56,
+                            child: OutlinedButton.icon(
+                              onPressed:
+                                  _query.isEmpty &&
+                                      selectedCategory == 'All' &&
+                                      selectedAuthor == 'All authors'
+                                  ? null
+                                  : () {
+                                      _searchController.clear();
+                                      setState(() {
+                                        _query = '';
+                                        _selectedCategory = 'All';
+                                        _selectedAuthor = 'All authors';
+                                      });
+                                    },
+                              icon: const Icon(Icons.filter_alt_off_rounded),
+                              label: const Text('Reset'),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      if (filteredArticles.isEmpty)
+                        const _EmptyCard(
+                          message:
+                              'No stories match your current search or filters yet.',
+                        )
+                      else ...[
+                        _SectionTitle(
+                          title: 'Top Articles',
+                          actionLabel: '${topArticles.length} ranked',
+                        ),
+                        const SizedBox(height: 12),
+                        if (leadArticle != null)
+                          if (isWide)
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  flex: 3,
+                                  child: _HeroArticleCard(
+                                    article: leadArticle,
+                                    wideLayout: true,
+                                    onTap: () =>
+                                        widget.onOpenArticle(leadArticle),
+                                    onShare: () =>
+                                        widget.onShareArticle(leadArticle),
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  flex: 2,
+                                  child: Column(
+                                    children: highlightedArticles
+                                        .map(
+                                          (article) => Padding(
+                                            padding: const EdgeInsets.only(
+                                              bottom: 12,
+                                            ),
+                                            child: _ArticleRailTile(
+                                              article: article,
+                                              emphasized: true,
+                                              onTap: () =>
+                                                  widget.onOpenArticle(article),
+                                              onShare: () => widget
+                                                  .onShareArticle(article),
+                                            ),
+                                          ),
+                                        )
+                                        .toList(growable: false),
+                                  ),
+                                ),
+                              ],
+                            )
+                          else ...[
+                            _HeroArticleCard(
+                              article: leadArticle,
+                              wideLayout: false,
+                              onTap: () => widget.onOpenArticle(leadArticle),
+                              onShare: () =>
+                                  widget.onShareArticle(leadArticle),
+                            ),
+                            if (highlightedArticles.isNotEmpty) ...[
+                              const SizedBox(height: 14),
+                              ...highlightedArticles.map(
+                                (article) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  child: _ArticleRailTile(
+                                    article: article,
+                                    emphasized: false,
+                                    onTap: () =>
+                                        widget.onOpenArticle(article),
+                                    onShare: () =>
+                                        widget.onShareArticle(article),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        if (quickPickArticles.isNotEmpty) ...[
+                          const SizedBox(height: 26),
+                          _SectionTitle(
+                            title: 'Quick Picks',
+                            actionLabel: '${quickPickArticles.length} stories',
+                          ),
+                          const SizedBox(height: 12),
+                          _HorizontalArticleScroller(
+                            articles: quickPickArticles,
+                            onOpenArticle: widget.onOpenArticle,
+                            onShareArticle: widget.onShareArticle,
+                          ),
+                        ],
+                        const SizedBox(height: 26),
+                        _SectionTitle(
+                          title: 'Latest Articles',
+                          actionLabel: '${latestArticles.length} fresh',
+                        ),
+                        const SizedBox(height: 12),
+                        ...latestArticles.map(
+                          (article) => Padding(
+                            padding: const EdgeInsets.only(bottom: 14),
+                            child: _ArticleCard(
+                              article: article,
+                              onTap: () => widget.onOpenArticle(article),
+                              onShare: () =>
+                                  widget.onShareArticle(article),
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          flex: 2,
-                          child: Column(
-                            children: highlightedArticles
-                                .map(
-                                  (article) => Padding(
-                                    padding: const EdgeInsets.only(bottom: 12),
-                                    child: _ArticleRailTile(
-                                      article: article,
-                                      emphasized: true,
-                                      onTap: () =>
-                                          widget.onOpenArticle(article),
-                                      onShare: () =>
-                                          widget.onShareArticle(article),
-                                    ),
-                                  ),
-                                )
-                                .toList(growable: false),
+                        if (categoryGroups.isNotEmpty) ...[
+                          const SizedBox(height: 12),
+                          ...categoryGroups.map(
+                            (group) => Padding(
+                              padding: const EdgeInsets.only(bottom: 26),
+                              child: _CategoryStorySection(
+                                title: group.category,
+                                articles: group.articles,
+                                onOpenArticle: widget.onOpenArticle,
+                                onShareArticle: widget.onShareArticle,
+                              ),
+                            ),
+                          ),
+                        ],
+                        _SectionTitle(
+                          title: 'All Articles',
+                          actionLabel: '${filteredArticles.length} total',
+                        ),
+                        const SizedBox(height: 12),
+                        ...filteredArticles.map(
+                          (article) => Padding(
+                            padding: const EdgeInsets.only(bottom: 14),
+                            child: _ArticleCard(
+                              article: article,
+                              onTap: () => widget.onOpenArticle(article),
+                              onShare: () =>
+                                  widget.onShareArticle(article),
+                            ),
                           ),
                         ),
                       ],
-                    )
-                  else ...[
-                    _HeroArticleCard(
-                      article: leadArticle,
-                      wideLayout: false,
-                      onTap: () => widget.onOpenArticle(leadArticle),
-                      onShare: () => widget.onShareArticle(leadArticle),
-                    ),
-                    if (highlightedArticles.isNotEmpty) ...[
-                      const SizedBox(height: 14),
-                      ...highlightedArticles.map(
-                        (article) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _ArticleRailTile(
-                            article: article,
-                            emphasized: false,
-                            onTap: () => widget.onOpenArticle(article),
-                            onShare: () => widget.onShareArticle(article),
-                          ),
-                        ),
-                      ),
                     ],
-                  ],
-                if (quickPickArticles.isNotEmpty) ...[
-                  const SizedBox(height: 26),
-                  _SectionTitle(
-                    title: 'Quick Picks',
-                    actionLabel: '${quickPickArticles.length} stories',
-                  ),
-                  const SizedBox(height: 12),
-                  _HorizontalArticleScroller(
-                    articles: quickPickArticles,
-                    onOpenArticle: widget.onOpenArticle,
-                    onShareArticle: widget.onShareArticle,
-                  ),
-                ],
-                const SizedBox(height: 26),
-                _SectionTitle(
-                  title: 'Latest Articles',
-                  actionLabel: '${latestArticles.length} fresh',
-                ),
-                const SizedBox(height: 12),
-                ...latestArticles.map(
-                  (article) => Padding(
-                    padding: const EdgeInsets.only(bottom: 14),
-                    child: _ArticleCard(
-                      article: article,
-                      onTap: () => widget.onOpenArticle(article),
-                      onShare: () => widget.onShareArticle(article),
-                    ),
                   ),
                 ),
-                if (categoryGroups.isNotEmpty) ...[
-                  const SizedBox(height: 12),
-                  ...categoryGroups.map(
-                    (group) => Padding(
-                      padding: const EdgeInsets.only(bottom: 26),
-                      child: _CategoryStorySection(
-                        title: group.category,
-                        articles: group.articles,
-                        onOpenArticle: widget.onOpenArticle,
-                        onShareArticle: widget.onShareArticle,
-                      ),
-                    ),
-                  ),
-                ],
-                _SectionTitle(
-                  title: 'All Articles',
-                  actionLabel: '${filteredArticles.length} total',
-                ),
-                const SizedBox(height: 12),
-                ...filteredArticles.map(
-                  (article) => Padding(
-                    padding: const EdgeInsets.only(bottom: 14),
-                    child: _ArticleCard(
-                      article: article,
-                      onTap: () => widget.onOpenArticle(article),
-                      onShare: () => widget.onShareArticle(article),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ],
           );
         },
@@ -1389,10 +1409,9 @@ class ReaderProfileTab extends StatelessWidget {
 }
 
 class _TopHeader extends StatelessWidget {
-  const _TopHeader({required this.title, this.initials, this.trailing});
+  const _TopHeader({required this.title, this.trailing});
 
   final String title;
-  final String? initials;
   final Widget? trailing;
 
   @override
@@ -1407,39 +1426,153 @@ class _TopHeader extends StatelessWidget {
             ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
         ),
-        if (trailing != null)
-          trailing!
-        else if (initials != null)
-          CircleAvatar(
-            radius: 22,
-            backgroundColor: ReaderPalette.primary,
-            child: Text(
-              initials!,
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                color: ReaderPalette.inverseText,
-              ),
-            ),
-          ),
+        ?trailing,
       ],
     );
   }
 }
 
-class _WelcomeCard extends StatelessWidget {
-  const _WelcomeCard({
+class _HomeSearchHeaderDelegate extends SliverPersistentHeaderDelegate {
+  const _HomeSearchHeaderDelegate({
     required this.bundle,
+    required this.baseUrl,
     required this.controller,
     required this.query,
     required this.onChanged,
     required this.onClear,
+    required this.onOpenProfile,
   });
 
   final DashboardBundle bundle;
+  final String baseUrl;
   final TextEditingController controller;
   final String query;
   final ValueChanged<String> onChanged;
   final VoidCallback onClear;
+  final VoidCallback onOpenProfile;
+
+  @override
+  double get minExtent => 96;
+
+  @override
+  double get maxExtent => 96;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    return Container(
+      color: ReaderPalette.canvas,
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+      child: _HomeSearchHeader(
+        bundle: bundle,
+        baseUrl: baseUrl,
+        controller: controller,
+        query: query,
+        onChanged: onChanged,
+        onClear: onClear,
+        onOpenProfile: onOpenProfile,
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant _HomeSearchHeaderDelegate oldDelegate) {
+    return bundle != oldDelegate.bundle ||
+        baseUrl != oldDelegate.baseUrl ||
+        controller != oldDelegate.controller ||
+        query != oldDelegate.query;
+  }
+}
+
+class _HomeSearchHeader extends StatelessWidget {
+  const _HomeSearchHeader({
+    required this.bundle,
+    required this.baseUrl,
+    required this.controller,
+    required this.query,
+    required this.onChanged,
+    required this.onClear,
+    required this.onOpenProfile,
+  });
+
+  final DashboardBundle bundle;
+  final String baseUrl;
+  final TextEditingController controller;
+  final String query;
+  final ValueChanged<String> onChanged;
+  final VoidCallback onClear;
+  final VoidCallback onOpenProfile;
+
+  @override
+  Widget build(BuildContext context) {
+    final profilePhotoUrl = resolveReaderAssetUrl(
+      baseUrl,
+      bundle.user.profilePhotoUrl,
+    );
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: controller,
+                onChanged: onChanged,
+                textInputAction: TextInputAction.search,
+                decoration: InputDecoration(
+                  prefixIcon: const Icon(Icons.search_rounded),
+                  hintText: 'Search articles, authors, or categories',
+                  suffixIcon: query.isEmpty
+                      ? null
+                      : IconButton(
+                          onPressed: onClear,
+                          icon: const Icon(Icons.close_rounded),
+                        ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onOpenProfile,
+                customBorder: const CircleBorder(),
+                child: Padding(
+                  padding: const EdgeInsets.all(2),
+                  child: CircleAvatar(
+                    radius: 24,
+                    backgroundColor: ReaderPalette.primarySoft,
+                    backgroundImage: profilePhotoUrl == null
+                        ? null
+                        : NetworkImage(profilePhotoUrl),
+                    child: profilePhotoUrl == null
+                        ? Text(
+                            bundle.user.initials,
+                            style: const TextStyle(
+                              color: ReaderPalette.inverseText,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          )
+                        : null,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _HomeSummaryCard extends StatelessWidget {
+  const _HomeSummaryCard({required this.bundle});
+
+  final DashboardBundle bundle;
 
   @override
   Widget build(BuildContext context) {
@@ -1453,79 +1586,29 @@ class _WelcomeCard extends StatelessWidget {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Wrap(
+          spacing: 10,
+          runSpacing: 10,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: controller,
-                    onChanged: onChanged,
-                    decoration: InputDecoration(
-                      prefixIcon: const Icon(Icons.search_rounded),
-                      hintText: 'Search articles, authors, or categories',
-                      suffixIcon: query.isEmpty
-                          ? null
-                          : IconButton(
-                              onPressed: onClear,
-                              icon: const Icon(Icons.close_rounded),
-                            ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                CircleAvatar(
-                  radius: 24,
-                  backgroundColor: ReaderPalette.primarySoft,
-                  child: Text(
-                    bundle.user.initials,
-                    style: const TextStyle(
-                      color: ReaderPalette.inverseText,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ],
+            _StatChip(
+              icon: Icons.menu_book_rounded,
+              label: '${bundle.articles.length} stories',
+              dark: false,
             ),
-            const SizedBox(height: 18),
-            Text(
-              'Reading board for ${firstName(bundle.user.name)}',
-              style: Theme.of(
-                context,
-              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+            _StatChip(
+              icon: Icons.lock_outline_rounded,
+              label: '$premiumCount premium',
+              dark: false,
             ),
-            const SizedBox(height: 6),
-            const Text(
-              'Browse front-page stories, thoughtful profiles, and premium essays in a calmer article layout.',
-              style: TextStyle(color: ReaderPalette.inkMuted, height: 1.55),
+            _StatChip(
+              icon: Icons.dashboard_customize_rounded,
+              label: '$categoryCount categories',
+              dark: false,
             ),
-            const SizedBox(height: 18),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                _StatChip(
-                  icon: Icons.menu_book_rounded,
-                  label: '${bundle.articles.length} stories',
-                  dark: false,
-                ),
-                _StatChip(
-                  icon: Icons.lock_outline_rounded,
-                  label: '$premiumCount premium',
-                  dark: false,
-                ),
-                _StatChip(
-                  icon: Icons.dashboard_customize_rounded,
-                  label: '$categoryCount categories',
-                  dark: false,
-                ),
-                _StatChip(
-                  icon: Icons.account_balance_wallet_rounded,
-                  label: formatCoins(bundle.wallet.walletBalance),
-                  dark: false,
-                ),
-              ],
+            _StatChip(
+              icon: Icons.account_balance_wallet_rounded,
+              label: formatCoins(bundle.wallet.walletBalance),
+              dark: false,
             ),
           ],
         ),
@@ -1898,7 +1981,7 @@ class _HorizontalArticleScroller extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 286,
+      height: 452,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: articles.length,
@@ -1938,26 +2021,27 @@ class _CompactArticleCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(24),
       child: Card(
         child: Padding(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(18),
                 child: SizedBox(
-                  height: 136,
+                  height: 96,
                   width: double.infinity,
                   child: article.imageUrl != null
                       ? Image.network(
-                          article.imageUrl!,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) =>
-                              _ArticleImageFallback(title: article.title),
-                        )
+                        article.imageUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) =>
+                            _ArticleImageFallback(title: article.title),
+                      )
                       : _ArticleImageFallback(title: article.title),
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -1970,44 +2054,46 @@ class _CompactArticleCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               Text(
                 article.title,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontWeight: FontWeight.w700,
-                  fontSize: 17,
+                  fontSize: 16,
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
               Text(
                 article.previewText,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   color: ReaderPalette.inkMuted,
+                  fontSize: 13,
                   height: 1.45,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
               _RatingBadge(
                 ratingAverage: article.ratingAverage,
                 ratingCount: article.ratingCount,
               ),
+              const SizedBox(height: 10),
+              Text(
+                article.authorName,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: ReaderPalette.inkMuted,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               const Spacer(),
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Expanded(
-                    child: Text(
-                      article.authorName,
-                      style: const TextStyle(
-                        color: ReaderPalette.inkMuted,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
                   _ReadMoreButton(onTap: onTap),
                   const SizedBox(width: 10),
                   _ArticleShareButton(onPressed: onShare),
@@ -2097,11 +2183,12 @@ class _RatingBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
+    return Wrap(
+      spacing: 6,
+      runSpacing: 4,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         const Icon(Icons.star_rounded, color: Color(0xFFFFC94A), size: 18),
-        const SizedBox(width: 6),
         Text(
           formatRating(ratingAverage),
           style: const TextStyle(
@@ -2109,7 +2196,6 @@ class _RatingBadge extends StatelessWidget {
             fontWeight: FontWeight.w700,
           ),
         ),
-        const SizedBox(width: 6),
         Text(
           '($ratingCount ratings)',
           style: const TextStyle(
@@ -2697,7 +2783,7 @@ class _ReadMoreButton extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(999),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
         decoration: BoxDecoration(
           color: background,
           borderRadius: BorderRadius.circular(999),
@@ -2711,9 +2797,10 @@ class _ReadMoreButton extends StatelessWidget {
               style: TextStyle(
                 color: foreground,
                 fontWeight: FontWeight.w600,
+                fontSize: 13,
               ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: 4),
             Icon(
               Icons.arrow_forward_ios_rounded,
               size: 12,
@@ -3090,15 +3177,6 @@ class _PromptStatChip extends StatelessWidget {
       ),
     );
   }
-}
-
-String firstName(String name) {
-  final trimmed = name.trim();
-  if (trimmed.isEmpty) {
-    return 'Reader';
-  }
-
-  return trimmed.split(RegExp(r'\s+')).first;
 }
 
 String initialsFor(String name) {

@@ -19,56 +19,66 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $admin = User::query()->updateOrCreate([
-            'email' => 'admin@example.com',
+        $admin = $this->seedUser([
+            'emails' => ['admin@example.com'],
+            'usernames' => ['platform-admin'],
         ], [
             'name' => 'Platform Admin',
+            'email' => 'admin@example.com',
             'username' => 'platform-admin',
-            'password' => 'password',
+            'password' => bcrypt('password'),
             'role' => UserRole::ADMIN,
             'wallet_balance' => 0,
             'email_verified_at' => now(),
         ]);
 
-        $author = User::query()->updateOrCreate([
-            'email' => 'author@example.com',
+        $author = $this->seedUser([
+            'emails' => ['naina.sharma@example.com', 'author@example.com'],
+            'usernames' => ['naina-sharma', 'demo-author'],
         ], [
-            'name' => 'Demo Author',
-            'username' => 'demo-author',
-            'password' => 'password',
+            'name' => 'Naina Sharma',
+            'email' => 'naina.sharma@example.com',
+            'username' => 'naina-sharma',
+            'password' => bcrypt('password'),
             'role' => UserRole::AUTHOR,
             'wallet_balance' => 500,
             'email_verified_at' => now(),
         ]);
 
-        $priya = User::query()->updateOrCreate([
-            'email' => 'priya.nair@example.com',
+        $priya = $this->seedUser([
+            'emails' => ['priya.nair@example.com'],
+            'usernames' => ['priya-nair'],
         ], [
             'name' => 'Priya Nair',
+            'email' => 'priya.nair@example.com',
             'username' => 'priya-nair',
-            'password' => 'password',
+            'password' => bcrypt('password'),
             'role' => UserRole::AUTHOR,
             'wallet_balance' => 420,
             'email_verified_at' => now(),
         ]);
 
-        $arjun = User::query()->updateOrCreate([
-            'email' => 'arjun.mehta@example.com',
+        $arjun = $this->seedUser([
+            'emails' => ['arjun.mehta@example.com'],
+            'usernames' => ['arjun-mehta'],
         ], [
             'name' => 'Arjun Mehta',
+            'email' => 'arjun.mehta@example.com',
             'username' => 'arjun-mehta',
-            'password' => 'password',
+            'password' => bcrypt('password'),
             'role' => UserRole::AUTHOR,
             'wallet_balance' => 390,
             'email_verified_at' => now(),
         ]);
 
-        User::query()->updateOrCreate([
-            'email' => 'reader@example.com',
+        $this->seedUser([
+            'emails' => ['aarav.mehta@example.com', 'reader@example.com'],
+            'usernames' => ['aarav-mehta', 'demo-reader'],
         ], [
-            'name' => 'Demo Reader',
-            'username' => 'demo-reader',
-            'password' => 'password',
+            'name' => 'Aarav Mehta',
+            'email' => 'aarav.mehta@example.com',
+            'username' => 'aarav-mehta',
+            'password' => bcrypt('password'),
             'role' => UserRole::READER,
             'wallet_balance' => 300,
             'email_verified_at' => now(),
@@ -273,6 +283,8 @@ class DatabaseSeeder extends Seeder
                 'commission_value' => $article['commission_value'],
                 'access_duration_hours' => $article['access_duration_hours'],
                 'status' => ArticleStatus::PUBLISHED,
+                'approved_by' => $admin->id,
+                'approved_at' => $article['published_at'],
                 'view_count' => $article['view_count'],
                 'unlock_count' => $article['unlock_count'],
                 'rating_average' => $article['rating_average'],
@@ -281,5 +293,33 @@ class DatabaseSeeder extends Seeder
                 'approved_at' => $article['published_at'],
             ]);
         }
+    }
+
+    private function seedUser(array $identity, array $attributes): User
+    {
+        $query = User::query()->where('email', $attributes['email']);
+        $usernames = array_values(array_filter($identity['usernames'] ?? []));
+
+        if (($attributes['username'] ?? null) !== null) {
+            $query->orWhere('username', $attributes['username']);
+        }
+
+        $user = $query->first();
+
+        if (! $user) {
+            $legacyQuery = User::query()->whereIn('email', $identity['emails']);
+
+            if ($usernames !== []) {
+                $legacyQuery->orWhereIn('username', $usernames);
+            }
+
+            $user = $legacyQuery->first();
+        }
+
+        $user ??= new User;
+        $user->fill($attributes);
+        $user->save();
+
+        return $user->refresh();
     }
 }
